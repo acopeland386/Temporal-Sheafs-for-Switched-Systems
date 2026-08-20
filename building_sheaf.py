@@ -8,7 +8,7 @@ from restriction_maps import (
 def agent_coboundary(
     agents: list[Agent],
     agent_edge_set: list[list[int]],
-    target_edge_set: list[list[int]]
+    agent_target_edge_set: list[list[int]]
 ) -> np.ndarray:
 
     F_i_ij, F_j_ij = agent_agent_restriction_maps()
@@ -18,7 +18,7 @@ def agent_coboundary(
     state_dim = agents[0].num_states
 
     num_agent_edges = len(agent_edge_set)
-    num_target_edges = len(target_edge_set)
+    num_target_edges = len(agent_target_edge_set)
     num_edges = num_agent_edges + num_target_edges
 
     delta_q = np.zeros(
@@ -29,7 +29,6 @@ def agent_coboundary(
     )
 
     # Agent-agent edges-------------------------------
-
     for edge_index, (i, j) in enumerate(agent_edge_set):
 
         edge = (i, j)
@@ -50,8 +49,7 @@ def agent_coboundary(
         delta_q[row_start:row_end, col_j_start:col_j_end] = -F_j
 
     # Agent-target edges-------------------------------
-
-    for target_edge_index, (i, T) in enumerate(target_edge_set):
+    for target_edge_index, (i, T) in enumerate(agent_target_edge_set):
 
         F_i = F_i_iT[i]
 
@@ -67,11 +65,13 @@ def agent_coboundary(
 
     return delta_q
 
+#----------------------------------------------------------------
+
 def target_coboundary(
     agents: list[Agent],
     targets: list[Target],
     agent_edge_set: list[list[int]],
-    target_edge_set: list[list[int]]
+    agent_target_edge_set: list[list[int]]
 ) -> np.ndarray:
 
     _, F_T_iT = agent_target_restriction_maps()
@@ -80,7 +80,7 @@ def target_coboundary(
     num_targets = len(targets)
 
     num_agent_edges = len(agent_edge_set)
-    num_target_edges = len(target_edge_set)
+    num_target_edges = len(agent_target_edge_set)
     num_edges = num_agent_edges + num_target_edges
 
     delta_p = np.zeros(
@@ -90,7 +90,7 @@ def target_coboundary(
         )
     )
 
-    for target_edge_index, (i, T) in enumerate(target_edge_set):
+    for target_edge_index, (i, T) in enumerate(agent_target_edge_set):
 
         F_T = F_T_iT[i]
 
@@ -105,3 +105,7 @@ def target_coboundary(
         delta_p[row_start:row_end, col_T_start:col_T_end] = F_T
 
     return delta_p
+
+
+
+

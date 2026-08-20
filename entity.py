@@ -30,7 +30,7 @@ class Entity:
         # observer state initializations
         self.observer: NDArray[np.float64] = np.zeros((self.num_states, time_steps))
         self.observer[:, 0] = initial_position # observer state
-        self.observer_dot: NDArray[np.float64] = np.zeros(self.num_states, time_steps)
+        self.observer_dot: NDArray[np.float64] = np.zeros((self.num_states, time_steps))
 
         # exact-extension state initialization
         self.agent_star: NDArray[np.float64] = np.zeros((self.num_states, time_steps)) # exact-extension state
@@ -62,16 +62,13 @@ class Entity:
         self.positions[:, step] = result_true
 
     # Update observer dynamics------------------------------
-
     def update_observer(self, step: int) -> None:
-
         F_i_ij, F_j_ij = agent_agent_restriction_maps()
         F_i_iT, F_T_iT = agent_target_restriction_maps()
-
+        
         def observer_dynamics(t: float, x_hat_i: NDArray[np.float64]) -> NDArray[np.float64]:
 
             # Agent-agent neighbors-------------------------------
-
             agent_term = np.zeros(self.num_states)
 
             for neighbor in self.neighbors:
@@ -94,7 +91,6 @@ class Entity:
                     agent_term += (F_i.T @ (F_j @ x_hat_j - F_i @ x_hat_i))
 
             # Agent-target neighbors-------------------------------
-
             target_term = np.zeros(self.num_states)
             i = int(self.id[1:])
 

@@ -8,86 +8,85 @@
   ],
 
   "agents": [
-  { "id": "A1",  "dynamics_type": "trophic_agent", "initial_position": [   10,    25,  5], "num_states": 3 },
-  { "id": "A2",  "dynamics_type": "trophic_agent", "initial_position": [  5.0, -25.0,  8], "num_states": 3 },
-  { "id": "A3",  "dynamics_type": "trophic_agent", "initial_position": [-17.0,  45.0,  4], "num_states": 3 },
-  { "id": "A4",  "dynamics_type": "trophic_agent", "initial_position": [ 60.0,  10.0,  -2], "num_states": 3 },
-  { "id": "A5",  "dynamics_type": "trophic_agent", "initial_position": [  5.0,  15.0,  -10], "num_states": 3 }
+  { "id": "A1",  "dynamics_type": "trophic_agent", "initial_position": [   10,    25,  5.0], "num_states": 3 },
+  { "id": "A2",  "dynamics_type": "trophic_agent", "initial_position": [  5.0, -25.0,  8.0], "num_states": 3 },
+  { "id": "A3",  "dynamics_type": "trophic_agent", "initial_position": [-17.0,  45.0,  4.0], "num_states": 3 },
+  { "id": "A4",  "dynamics_type": "trophic_agent", "initial_position": [ 60.0,  10.0, -2.0], "num_states": 3 },
+  { "id": "A5",  "dynamics_type": "trophic_agent", "initial_position": [  5.0,  15.0, -10.0], "num_states": 3 }
 ],
 
-  "top_1_agent_edge": [
-  [1,2], [2,3]
-],
-
-  "top_2_agent_edge": [
-  [3,4]
-],
-
-  "top_3_agent_edge": [
-  [1,2]
-],
-
-  "top_4_agent_edge": [
-  [1,2], [3,4]
-],
-
-  "top_5_agent_edge": [
-  [4,5]
-],
-
-  "union_topology_edge": [
-  [1,2], [2,3], [3,4], [4,5]    
-],
-
-    "top_1_pin_matrix": [
-     [1],
-     [0],
-     [0],
-     [0],
-     [0] 
+"topologies": {
+  "1": {
+    "agent_edges": [
+      [1, 2], [2, 3]
     ],
+    "pin_matrix": [
+      [1], [0], [0], [0], [0]
+    ]
+  },
 
-  "top_2_pin_matrix": [
-     [0],
-     [1],
-     [0],
-     [0],
-     [0] 
+  "2": {
+    "agent_edges": [
+      [3, 4]
     ],
+    "pin_matrix": [
+      [0], [1], [0], [0], [0]
+    ]
+  },
 
-  "top_3_pin_matrix": [
-     [0],
-     [0],
-     [0],
-     [0],
-     [0] 
+  "3": {
+    "agent_edges": [
+      [1, 2]
     ],
+    "pin_matrix": [
+      [0], [0], [0], [0], [0]
+    ]
+  },
 
-  "top_4_pin_matrix": [
-     [0],
-     [0],
-     [0],
-     [0],
-     [0] 
+  "4": {
+    "agent_edges": [
+      [1, 2], [3, 4]
     ],
+    "pin_matrix": [
+      [0], [0], [0], [0], [0]
+    ]
+  },
 
-  "top_5_pin_matrix": [
-     [1],
-     [1],
-     [1],
-     [1],
-     [1] 
+  "5": {
+    "agent_edges": [
+      [4, 5]
     ],
+    "pin_matrix": [
+      [1], [1], [1], [1], [1]
+    ]
+  }
+},
 
-  "union_pin_matrix": [
-    [1],
-    [1],
-    [0],
-    [0],
-    [1]
+  "switching_block": 
+  [
+    {
+      "block_start_time": 0,
+      "block_end_time": 10,
+      "subintervals":
+      [
+        {"subinterval_start_time": 0, "subinterval_end_time": 5, "topology_num": 1, "duration": 5},
+        {"subinterval_start_time": 5, "subinterval_end_time": 7, "topology_num": 2, "duration": 2},
+        {"subinterval_start_time": 7, "subinterval_end_time": 10, "topology_num": 3, "duration": 3}
+      ]
+    },
 
+    {
+      "block_start_time": 10,
+      "block_end_time": 20,
+      "subintervals":
+      [
+        {"subinterval_start_time": 10, "subinterval_end_time": 14, "topology_num": 2, "duration": 4},
+        {"subinterval_start_time": 14, "subinterval_end_time": 16, "topology_num": 4, "duration": 2},
+        {"subinterval_start_time": 16, "subinterval_end_time": 20, "topology_num": 5, "duration": 4}
+      ]
+    }
   ],
 
-  "agents_proportional_gain": 10,
-  "target_proportional_gain": 5
+  "observer_gain": 10,
+  "controller_gain": 5
 }
