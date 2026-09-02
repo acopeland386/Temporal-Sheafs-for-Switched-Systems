@@ -128,9 +128,9 @@ def get_initial_conditions(dynamics_type: str) -> List[float]:
         "attitude_mrp": [0.25, 0.10, -0.30],    
         "chua": [0.2, 0.0, 0.0],                
         "trophic_dynamics": [40.0, 9.0, 2.0],    
-        "trophic_agent": [0.0, 0.0, 0.0],               
-        "trophic_target": [0.0, 0.0, 0.0],
-        "desired_target_velocity": [0.0, 0.0, 0.0],    
+        "trophic_agent": [2, -3, 5],               
+        "trophic_target": [-2, 6, 10],
+        "desired_target_velocity": [5, 5, 5],    
     }
    
     return initial_conditions_map[dynamics_type]

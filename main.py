@@ -9,7 +9,8 @@ from numpy.typing import NDArray
 from entity import Agent, Target, compute_exact_extension
 from simulation.dynamics import get_initial_conditions
 from building_sheaf import agent_coboundary, target_coboundary
-from plotter import plot_results
+from plotter import plot_tracking_error
+from entity import compute_extension_map
 
 def build_entity_specs(base_config: dict[str, Any], section_key: str) -> List[Tuple[NDArray[np.float64], dict[str, Any]]]:
     specs: List[Tuple[NDArray[np.float64], dict[str, Any]]] = []
@@ -91,11 +92,17 @@ def get_active_topology(
     schedule: list[tuple[float, float, int]]
 ) -> int:
 
+    schedule_start = schedule[0][0]
+    schedule_end = schedule[-1][1]
+    schedule_duration = schedule_end - schedule_start
+
+    wrapped_time = ((time - schedule_start) % schedule_duration) + schedule_start
+
     for start_time, end_time, topology_num in schedule:
-        if start_time <= time < end_time:
+        if start_time <= wrapped_time < end_time:
             return topology_num
 
-    return schedule[-1][2]
+    return schedule[0][2]
 
 #----------------------------------------------------------------------
 
@@ -120,7 +127,7 @@ def apply_active_topology(
 
 #----------------------------------------------------------------------
 
-def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
+def run_simulation_from_configs(configs: list[dict[str, Any]]):
     base_config = configs[0]
 
     final_time: float = base_config["final_time"]
@@ -149,6 +156,100 @@ def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
     delta_q = []
     delta_T = []
 
+    # construct the underlying agent-agent and agent-target edge sets based on the union of all topologies
+    underlying_agent_edges = sorted({
+        tuple(edge)
+        for topology in base_config["topologies"].values()
+        for edge in topology["agent_edges"]
+    })
+
+    underlying_agent_edges = [list(edge) for edge in underlying_agent_edges]
+
+    underlying_pin_matrix = [
+        [
+            int(any(
+                topology["pin_matrix"][agent_index][0] == 1
+                for topology in base_config["topologies"].values()
+            ))
+        ]
+        for agent_index in range(len(agents))
+    ]
+
+    underlying_agent_target_edges = construct_agent_target_edge_set(underlying_pin_matrix)
+
+    delta_q = agent_coboundary(
+        agents=agents,
+        agent_edge_set=underlying_agent_edges,
+        agent_target_edge_set=underlying_agent_target_edges
+    )
+
+    delta_T = target_coboundary(
+        agents=agents,
+        targets=target,
+        agent_edge_set=underlying_agent_edges,
+        agent_target_edge_set=underlying_agent_target_edges
+    )
+
+    extension_map = compute_extension_map(delta_q, delta_T)
+
+    # underlying sheaf diagnostics-------------------------------
+    print("\n--- Underlying Sheaf Diagnostics ---")
+
+    # rank / nullity of delta_q
+    rank_delta_q = np.linalg.matrix_rank(delta_q)
+    nullity_delta_q = delta_q.shape[1] - rank_delta_q
+
+    print(f"rank(delta_q): {rank_delta_q}")
+    print(f"nullity(delta_q): {nullity_delta_q}")
+
+    # positive definiteness of delta_q.T @ delta_q
+    eigenvalues = np.linalg.eigvalsh(delta_q.T @ delta_q)
+
+    print("\neigenvalues(delta_q.T @ delta_q):")
+    print(eigenvalues)
+
+    print(
+        "delta_q.T @ delta_q positive definite:",
+        np.all(eigenvalues > 1e-10))
+
+    # image condition Im(delta_T) subset Im(delta_q)
+    rank_augmented = np.linalg.matrix_rank(
+        np.hstack((delta_q, delta_T)))
+
+    print("\nImage condition:")
+    print(f"rank(delta_q):             {rank_delta_q}")
+    print(f"rank([delta_q, delta_T]):  {rank_augmented}")
+    print(
+        "Im(delta_T) subset Im(delta_q):",
+        rank_augmented == rank_delta_q
+    )
+
+    # projection residual for image condition
+    P_q = delta_q @ np.linalg.pinv(delta_q)
+
+    image_residual = np.linalg.norm(
+        (np.eye(delta_q.shape[0]) - P_q) @ delta_T
+    )
+
+    print(
+        "Image-condition residual ||(I - P_q) delta_T||:",
+        image_residual
+    )
+
+    # exact-extension residual
+    extension_residual = np.linalg.norm(
+        delta_q @ extension_map + delta_T
+    )
+
+    print(
+        "Exact-extension residual ||delta_q H + delta_T||:",
+        extension_residual
+    )
+
+
+
+
+
     # update dynamics for each time step of active topology
     for step in range(1, time_steps):
         time = step * time_step_delta
@@ -158,57 +259,41 @@ def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
         if topology_num != current_topology_num:
             topology = base_config["topologies"][str(topology_num)]
             agent_edge_set, agent_target_edge_set = apply_active_topology(agents, topology)
-
-            print(f"\nTime: {time:.2f}, Active Topology: {topology_num}")
-            print(f"Agent edge set: {agent_edge_set}")
-            print(f"Agent-target edge set: {agent_target_edge_set}")
-
-            delta_q = agent_coboundary(
-                agents=agents,
-                agent_edge_set=agent_edge_set,
-                agent_target_edge_set=agent_target_edge_set
-            )
-
-            delta_T = target_coboundary(
-                agents=agents,
-                targets=target,
-                agent_edge_set=agent_edge_set,
-                agent_target_edge_set=agent_target_edge_set
-            )
-
             current_topology_num = topology_num
-            print(f"Agent coboundary matrix (delta_q):\n{delta_q}")
-            print(f"Target coboundary matrix (delta_T):\n{delta_T}")
 
-        # target dynamics update
-        for target_entity in target:
-            target_entity.compute_control_output()
-            target_entity.update_dynamics(step)
+            # print(f"\nTime: {time:.2f}, Active Topology: {topology_num}")
+            # print(f"Agent edge set: {agent_edge_set}")
+            # print(f"Agent-target edge set: {agent_target_edge_set}")
 
-        # agent dynamics update
+            # print(f"Agent coboundary matrix (delta_q):\n{delta_q}")
+            # print(f"Target coboundary matrix (delta_T):\n{delta_T}")
+
+        # agent dynamics update-------------------------------
         for agent in agents:
+            agent.compute_observer_dynamics(step)
             agent.compute_control_output(step)
-            agent.update_dynamics(step)
+            agent.update_agent_dynamics(step)
 
-        # exact-extension update
+        # target dynamics update-------------------------------
+        for target_entity in target:
+            target_entity.compute_control_output(step)
+            target_entity.update_agent_dynamics(step)
+
+        # exact-extension update-------------------------------
         compute_exact_extension(
             agents=agents,
             targets=target,
             delta_q=delta_q,
             delta_T=delta_T,
+            extension_map=extension_map,
             step=step
         )
 
-        # observer update
+        # update observer dynamics-----------------------------
         for agent in agents:
             agent.update_observer(step)
 
-    plot_results(
-        agents=agents,
-        targets=target,
-        active_topology_history=active_topology_history,
-        time_step_delta=time_step_delta
-    )
+    return agents, target, active_topology_history
 
 config_path = Path(__file__).parent / "config_common.json"
 
@@ -226,6 +311,13 @@ def load_configurations() -> list[dict[str, Any]]:
 
 def run_batch_simulation_with_results() -> None:
     configs = load_configurations()
-    run_simulation_from_configs(configs)
+
+    agents, target, active_topology_history = run_simulation_from_configs(configs)
+
+    plot_tracking_error(
+        agents=agents,
+        active_topology_history=active_topology_history,
+        time_step_delta=configs[0]["time_step_delta"]
+    )
 
 run_batch_simulation_with_results()

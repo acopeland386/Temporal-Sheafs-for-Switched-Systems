@@ -102,7 +102,7 @@ def target_coboundary(
         col_T_start = (T - 1) * state_dim
         col_T_end = col_T_start + state_dim
 
-        delta_p[row_start:row_end, col_T_start:col_T_end] = F_T
+        delta_p[row_start:row_end, col_T_start:col_T_end] = -F_T
 
     return delta_p
 
