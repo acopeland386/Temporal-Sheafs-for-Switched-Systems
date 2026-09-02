@@ -68,7 +68,6 @@ def plot_tracking_error(
         )
 
     ax_error.set_ylabel(r"$\|e_i(t)\|$")
-    ax_error.legend(loc="upper right", ncol=len(agents))
     ax_error.grid(True, alpha=0.3)
 
     ax_topology.step(
