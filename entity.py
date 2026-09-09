@@ -7,7 +7,8 @@ from typing import Any, List
 
 from simulation import dynamics
 from simulation.integrate import integrate_step
-from restriction_maps import (agent_agent_restriction_maps, agent_target_restriction_maps)
+from restriction_maps import (agent_agent_restriction_maps_1, agent_target_restriction_maps_1, 
+                              agent_agent_restriction_maps_2, agent_target_restriction_maps_2)
 
 class Entity:
     def __init__(self, initial_position: NDArray[np.float64], time_steps: int, config: dict[str, Any]) -> None:
@@ -19,8 +20,10 @@ class Entity:
         self.neighbors: List["Entity"] = []
 
         # sheaf stuff
-        self.F_i_ij, self.F_j_ij = agent_agent_restriction_maps()
-        self.F_i_iT, self.F_T_iT = agent_target_restriction_maps()
+        self.F_i_ij, self.F_j_ij = agent_agent_restriction_maps_1()
+        self.F_i_iT, self.F_T_iT = agent_target_restriction_maps_1()
+        self.F_i_ij, self.F_j_ij = agent_agent_restriction_maps_2()
+        self.F_i_iT, self.F_T_iT = agent_target_restriction_maps_2()
         self.delta_q: NDArray[np.float64] = np.zeros((0, 0))
         self.delta_T: NDArray[np.float64] = np.zeros((0, 0))
 
@@ -31,7 +34,6 @@ class Entity:
 
         # observer state initializations
         self.observer: NDArray[np.float64] = np.zeros((self.num_states, time_steps))
-        self.observer[:, 0] = initial_position # observer state
         self.observer_dot: NDArray[np.float64] = np.zeros((self.num_states, time_steps))
 
         # exact-extension state initialization
@@ -151,16 +153,28 @@ class Agent(Entity):
 # ---------------------------------------------------------------------
 
 class Target(Entity):
-    def __init__(self, 
-                 initial_position: NDArray[np.float64], 
-                 time_steps: int, 
+    def __init__(self,
+                 initial_position: NDArray[np.float64],
+                 time_steps: int,
                  config: dict[str, Any]) -> None:
 
         super().__init__(initial_position, time_steps, config)
 
     def compute_control_output(self, step: int) -> None:
-            desired_velocity = np.zeros(self.num_states)
-            self.control_output[:, step] = desired_velocity
+        self.control_output[:, step] = np.zeros(self.num_states)
+
+    def update_agent_dynamics(self, step: int) -> None:
+        def target_dynamics(t: float, pos: NDArray[np.float64]) -> NDArray[np.float64]:
+            return self.dynamics_function(pos)
+
+        result_true = integrate_step(
+            self.positions[:, step - 1],
+            step,
+            self.time_step_delta,
+            target_dynamics
+        )
+
+        self.positions[:, step] = result_true
 
 # ---------------------------------------------------------------------
 

@@ -4,15 +4,15 @@
   "seed": 0,
   
   "target": [
-  {"id": "T1", "dynamics_type": "trophic_target", "tracking_type": "desired_target_velocity", "initial_position": [10.0, 9.0, 2.0], "num_states": 3 }
+  {"id": "T1", "dynamics_type": "attitude_mrp", "tracking_type": "desired_target_velocity", "initial_position": [0.1, 0.01, 0.27], "num_states": 3 }
   ],
 
   "agents": [
-  { "id": "A1",  "dynamics_type": "trophic_agent", "initial_position": [   1,    2,  5.0], "num_states": 3 },
-  { "id": "A2",  "dynamics_type": "trophic_agent", "initial_position": [  5.0, -5.0,  8.0], "num_states": 3 },
-  { "id": "A3",  "dynamics_type": "trophic_agent", "initial_position": [-1.0,  4.0,  4.0], "num_states": 3 },
-  { "id": "A4",  "dynamics_type": "trophic_agent", "initial_position": [ 0.0,  1.0, -2.0], "num_states": 3 },
-  { "id": "A5",  "dynamics_type": "trophic_agent", "initial_position": [  5.0,  5.0, -1.0], "num_states": 3 }
+  { "id": "A1",  "dynamics_type": "planar_dynamics", "initial_position": [5.0, 10.0], "num_states": 2 },
+  { "id": "A2",  "dynamics_type": "planar_dynamics", "initial_position": [6.0, 1.0], "num_states": 2 },
+  { "id": "A3",  "dynamics_type": "attitude_mrp", "initial_position": [7.0, 8.0, 8.0], "num_states": 3 },
+  { "id": "A4",  "dynamics_type": "attitude_mrp", "initial_position": [2.0, 2.0, 13.0], "num_states": 3 },
+  { "id": "A5",  "dynamics_type": "planar_dynamics", "initial_position": [14.0, 2.0], "num_states": 2 }
 ],
 
 "topologies": {
@@ -57,7 +57,7 @@
       [4, 5]
     ],
     "pin_matrix": [
-      [1], [1], [1], [1], [1]
+      [1], [0], [0], [0], [1]
     ]
   }
 },
@@ -80,13 +80,13 @@
       "block_end_time": 20,
       "subintervals":
       [
-        {"subinterval_start_time": 10, "subinterval_end_time": 14, "topology_num": 2, "duration": 4},
-        {"subinterval_start_time": 14, "subinterval_end_time": 16, "topology_num": 4, "duration": 2},
-        {"subinterval_start_time": 16, "subinterval_end_time": 20, "topology_num": 5, "duration": 4}
+        {"subinterval_start_time": 10, "subinterval_end_time": 11, "topology_num": 2, "duration": 1},
+        {"subinterval_start_time": 11, "subinterval_end_time": 18, "topology_num": 4, "duration": 7},
+        {"subinterval_start_time": 18, "subinterval_end_time": 20, "topology_num": 5, "duration": 2}
       ]
     }
   ],
 
   "observer_gain": 10,
-  "controller_gain": 15
+  "controller_gain": 10
 }

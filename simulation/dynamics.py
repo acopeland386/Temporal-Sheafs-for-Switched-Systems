@@ -34,6 +34,25 @@ def attitude_mrp(state: NDArray[np.float64]) -> NDArray[np.float64]:
     r_dot: NDArray[np.float64] = 0.5 * b_mat @ omega_body
     return r_dot
 
+#---------------------------------------------------------------------
+
+def planar_dynamics(
+    state: NDArray[np.float64]
+) -> NDArray[np.float64]:
+
+    x = state[0]
+    y = state[1]
+
+    omega = 0.1
+
+    x_dot = -omega * y
+    y_dot = omega * x
+
+    return np.array([
+        x_dot,
+        y_dot
+    ], dtype=np.float64)
+
 # ---------------------------------------------------------------------
 
 def chua(state: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -115,8 +134,11 @@ def get_dynamics_function(dynamics_type: str) -> Callable[[NDArray[np.float64]],
         "chua": chua,
         "trophic_dynamics": trophic_dynamics,
         "trophic_agent": trophic_dynamics,     
-        "trophic_target": trophic_dynamics,     
+        "trophic_target": trophic_dynamics,   
+        "chua_agent": chua,
+        "chua_target": chua,  
         "desired_target_velocity": desired_target_velocity,
+        "planar_dynamics": planar_dynamics
     }
     return dynamics_map[dynamics_type]
 
@@ -125,12 +147,15 @@ def get_dynamics_function(dynamics_type: str) -> Callable[[NDArray[np.float64]],
 def get_initial_conditions(dynamics_type: str) -> List[float]:
     """Return a list of reasonable initial conditions for the chosen model."""
     initial_conditions_map: Dict[str, List[float]] = {
-        "attitude_mrp": [0.25, 0.10, -0.30],    
-        "chua": [0.2, 0.0, 0.0],                
+        "attitude_mrp": [5, 10, 20],               
         "trophic_dynamics": [40.0, 9.0, 2.0],    
         "trophic_agent": [2, -3, 5],               
         "trophic_target": [-2, 6, 10],
+        "chua": [0.2, 5, 5],     
+        "chua_agent": [0.2, 5, 5],
+        "chua_target": [0.2, 5, 5],
         "desired_target_velocity": [5, 5, 5],    
+        "planar_dynamics": [5, 5]
     }
    
     return initial_conditions_map[dynamics_type]
